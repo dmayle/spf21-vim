@@ -55,16 +55,44 @@
     " Setup Bundle Support {
         " The next three lines ensure that the ~/.vim/bundle/ system works
         filetype off
-        set rtp+=~/.vim/bundle/vundle
-        call vundle#rc()
+        try
+          call plug#begin()
+
+          function! Bundle(...)
+            call call('plug#', a:000)
+          endfunction
+
+          com! -nargs=+         Bundle
+          \ call Bundle(<args>)
+
+          function! UnBundle(arg, ...)
+            if a:arg =~ ':'
+              let uri = a:arg
+            else
+              let uri = printf('https://git::@github.com/%s.git', a:arg)
+            endif
+            " Use items() to get [[key1, value1], [key2, value2], ...]
+            let pluginkey = items(g:plugs)
+            call filter(pluginkey, {idx, val -> val[1]["uri"] == uri})
+
+            call filter(g:plugs, 'v:val["uri"] != "' . uri . '"')
+            call filter(g:plugs_order, {idx, val -> val != pluginkey[0][0]})
+          endfunction
+        catch E117
+          set rtp+=~/.vim/bundle/vundle
+          call vundle#rc()
+
+          function! UnBundle(arg, ...)
+            let bundle = vundle#config#init_bundle(a:arg, a:000)
+            call filter(g:vundle#bundles, 'v:val["name_spec"] != "' . a:arg . '"')
+          endfunction
+
+          Bundle 'gmarik/vundle'
+
+        endtry
     " }
 
     " Add an UnBundle command {
-    function! UnBundle(arg, ...)
-      let bundle = vundle#config#init_bundle(a:arg, a:000)
-      call filter(g:vundle#bundles, 'v:val["name_spec"] != "' . a:arg . '"')
-    endfunction
-
     com! -nargs=+         UnBundle
     \ call UnBundle(<args>)
     " }
@@ -74,7 +102,6 @@
 " Bundles {
 
     " Deps {
-        Bundle 'gmarik/vundle'
         Bundle 'MarcWeber/vim-addon-mw-utils'
         Bundle 'tomtom/tlib_vim'
         if executable('ag')
@@ -112,7 +139,7 @@
             Bundle 'tacahiroy/ctrlp-funky'
             Bundle 'terryma/vim-multiple-cursors'
             Bundle 'vim-scripts/sessionman.vim'
-            Bundle 'matchit.zip'
+            Bundle 'vim-scripts/matchit.zip'
             if (has("python") || has("python3")) && exists('g:spf13_use_powerline') && !exists('g:spf13_use_old_powerline')
                 Bundle 'Lokaltog/powerline', {'rtp':'/powerline/bindings/vim'}
             elseif exists('g:spf13_use_powerline') && exists('g:spf13_use_old_powerline')
@@ -132,7 +159,7 @@
                 Bundle 'vim-scripts/restore_view.vim'
             endif
             Bundle 'mhinz/vim-signify'
-            Bundle 'tpope/vim-abolish.git'
+            Bundle 'tpope/vim-abolish'
             Bundle 'osyo-manga/vim-over'
             Bundle 'kana/vim-textobj-user'
             Bundle 'kana/vim-textobj-indent'
@@ -184,7 +211,7 @@
             Bundle 'Shougo/neosnippet-snippets'
             Bundle 'honza/vim-snippets'
         elseif count(g:spf13_bundle_groups, 'neocomplete')
-            Bundle 'Shougo/neocomplete.vim.git'
+            Bundle 'Shougo/neocomplete.vim'
             Bundle 'Shougo/neosnippet'
             Bundle 'Shougo/neosnippet-snippets'
             Bundle 'honza/vim-snippets'
@@ -204,8 +231,8 @@
             " Pick either python-mode or pyflakes & pydoc
             Bundle 'klen/python-mode'
             Bundle 'yssource/python.vim'
-            Bundle 'python_match.vim'
-            Bundle 'pythoncomplete'
+            Bundle 'vim-scripts/python_match.vim'
+            Bundle 'vim-scripts/pythoncomplete'
         endif
     " }
 
@@ -244,7 +271,7 @@
 
     " HTML {
         if count(g:spf13_bundle_groups, 'html')
-            Bundle 'amirh/HTML-AutoCloseTag'
+            Bundle 'vim-scripts/HTML-AutoCloseTag'
             Bundle 'hail2u/vim-css3-syntax'
             Bundle 'gorodinskiy/vim-coloresque'
             Bundle 'tpope/vim-haml'

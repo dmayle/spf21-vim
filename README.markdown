@@ -15,7 +15,7 @@ The distribution is completely customisable using a `~/.vimrc.local`, `~/.vimrc.
 
 ![spf13-vim image][spf13-vim-img]
 
-Unlike traditional VIM plugin structure, which similar to UNIX throws all files into common directories, making updating or disabling plugins a real mess, spf13-vim 3 uses the [Vundle] plugin management system to have a well organized vim directory (Similar to mac's app folders). Vundle also ensures that the latest versions of your plugins are installed and makes it easy to keep them up to date.
+Unlike traditional VIM plugin structure, which similar to UNIX throws all files into common directories, making updating or disabling plugins a real mess, spf13-vim 3 uses either the [Vundle] or [Vim-Plug] plugin management system to have a well organized vim directory (Similar to mac's app folders). Vundle/Vim-Plug also ensures that the latest versions of your plugins are installed and makes it easy to keep them up to date.
 
 Great care has been taken to ensure that each plugin plays nicely with others, and optional configuration has been provided for what we believe is the most efficient use.
 
@@ -335,7 +335,7 @@ YouCompleteMe is another amazing completion engine. It is slightly more involved
 
 To enable YouCompleteMe add `youcompleteme` to your list of groups by overriding it in your `.vimrc.before.local` like so: `let g:spf13_bundle_groups=['general', 'programming', 'misc', 'scala', 'youcompleteme']` This is just an example. Remember to choose the other groups you want here.
 
-Once you have done this you will need to get Vundle to grab the latest code from git. You can do this by calling `:BundleInstall!`. You should see YouCompleteMe in the list.
+Once you have done this you will need to get Vundle to grab the latest code from git. You can do this by calling `:BundleInstall!`. You should see YouCompleteMe in the list. Vim-Plug automatically handles updating YouCompleteMe
 
 You will now have the code in your bundles directory and can proceed to compile the core. Change to the directory it has been downloaded to. If you have a vanilla install then `cd ~/.spf13-vim-3/.vim/bundle/YouCompleteMe/` should do the trick. You should see a file in this directory called install.sh. There are a few options to consider before running the installer:
 
@@ -534,6 +534,7 @@ Here's some tips if you've never used VIM before:
 [contributors]:https://github.com/spf13/spf13-vim/contributors
 
 [Vundle]:https://github.com/gmarik/vundle
+[Vim-Plug]:https://github.com/junegunn/vim-plug
 [PIV]:https://github.com/spf13/PIV
 [NERDCommenter]:https://github.com/scrooloose/nerdcommenter
 [Undotree]:https://github.com/mbbill/undotree

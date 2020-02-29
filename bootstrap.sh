@@ -22,6 +22,7 @@ app_name='spf13-vim'
 debug_mode='0'
 fork_maintainer='0'
 [ -z "$VUNDLE_URI" ] && VUNDLE_URI="https://github.com/gmarik/vundle.git"
+[ -z "$VIMPLUG_URI" ] && VIMPLUG_URI="https://github.com/junegunn/vim-plug.git"
 
 ############################  BASIC SETUP TOOLS
 msg() {
@@ -63,6 +64,23 @@ program_must_exist() {
     # throw error on non-zero return value
     if [ "$?" -ne 0 ]; then
         error "You must have '$1' installed to continue."
+    fi
+}
+
+one_program_must_exist() {
+    program_exists $1
+
+    # check second program on non-zero return value
+    if [ "$?" -ne 0 ]; then
+
+        program_exists $2
+
+        # throw error on non-zero return value
+        if [ "$?" -ne 0 ]; then
+
+            error "You must have either '$1' or '$2' installed to continue."
+
+        fi
     fi
 }
 
@@ -117,6 +135,39 @@ sync_repo() {
     debug
 }
 
+extract_github_file() {
+    local repo_path="$1"
+    local file_name="$2"
+    local repo_uri="${3/.git/}"
+    repo_uri="${repo_uri/github/raw.githubusercontent}"
+    local repo_branch="$4"
+    local repo_name="$5"
+
+    msg "Trying to update $repo_name"
+
+    if [ ! -e "$repo_path" ]; then
+        mkdir -p "$repo_path"
+    fi
+
+    if [ -f "$repo_path/$file_name" ]; then
+        local message="Successfully update file from $repo_name."
+    else
+        local message="Successfully extracted file from $repo_name."
+    fi
+
+    if program_exists "curl"; then
+        curl -fLo "$repo_path/$file_name" "$repo_uri/$repo_branch/$file_name"
+    else
+        wget -O "$repo_path/$file_name" "$repo_uri/$repo_branch/$file_name"
+    fi
+    ret="$?"
+
+
+    success "$message"
+
+    debug
+}
+
 create_symlinks() {
     local source_path="$1"
     local target_path="$2"
@@ -157,6 +208,23 @@ setup_fork_mode() {
     fi
 }
 
+setup_vimplug() {
+    local system_shell="$SHELL"
+    export SHELL='/bin/sh'
+
+    vim \
+        -u "$1" \
+        "+set nomore" \
+        "+PlugInstall!" \
+        "+PlugClean" \
+        "+qall"
+
+    export SHELL="$system_shell"
+
+    success "Now updating/installing plugins using Vim-Plug"
+    debug
+}
+
 setup_vundle() {
     local system_shell="$SHELL"
     export SHELL='/bin/sh'
@@ -178,29 +246,44 @@ setup_vundle() {
 variable_set "$HOME"
 program_must_exist "vim"
 program_must_exist "git"
+one_program_must_exist "curl" "wget"
 
-do_backup       "$HOME/.vim" \
-                "$HOME/.vimrc" \
-                "$HOME/.gvimrc"
+do_backup               "$HOME/.vim" \
+                        "$HOME/.vimrc" \
+                        "$HOME/.gvimrc"
 
-sync_repo       "$APP_PATH" \
-                "$REPO_URI" \
-                "$REPO_BRANCH" \
-                "$app_name"
+sync_repo               "$APP_PATH" \
+                        "$REPO_URI" \
+                        "$REPO_BRANCH" \
+                        "$app_name"
 
-create_symlinks "$APP_PATH" \
-                "$HOME"
+create_symlinks         "$APP_PATH" \
+                        "$HOME"
 
-setup_fork_mode "$fork_maintainer" \
-                "$APP_PATH" \
-                "$HOME"
+setup_fork_mode         "$fork_maintainer" \
+                        "$APP_PATH" \
+                        "$HOME"
 
-sync_repo       "$HOME/.vim/bundle/vundle" \
-                "$VUNDLE_URI" \
-                "master" \
-                "vundle"
+if [[ "$1" != "--vim-plug" ]]; then
 
-setup_vundle    "$APP_PATH/.vimrc.bundles.default"
+    extract_github_file "$HOME/.vim/autoload" \
+                        "plug.vim" \
+                        "$VIMPLUG_URI" \
+                        "master" \
+                        "vimplug"
+
+    setup_vimplug       "$APP_PATH/.vimrc.bundles.default"
+
+else
+
+    sync_repo           "$HOME/.vim/bundle/vundle" \
+                        "$VUNDLE_URI" \
+                        "master" \
+                        "vundle"
+
+    setup_vundle        "$APP_PATH/.vimrc.bundles.default"
+
+fi
 
 msg             "\nThanks for installing $app_name."
 msg             "© `date +%Y` http://vim.spf13.com/"
