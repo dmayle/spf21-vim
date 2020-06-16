@@ -78,11 +78,11 @@
             call filter(g:plugs, 'v:val["uri"] != "' . uri . '"')
             try
               call filter(g:plugs_order, {idx, val -> val != pluginkey[0][0]})
-            catch E684
+            catch /E684/
               echo "Cannot UnBundle: " . uri
             endtry
           endfunction
-        catch E117
+        catch /E117/
           set rtp+=~/.vim/bundle/vundle
           call vundle#rc()
 
